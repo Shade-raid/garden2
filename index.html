@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Garden Grower 🌱</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    background: linear-gradient(135deg, #a3d9a5, #e7ffe9);
+    color: #2f4f2f;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+  h1 { 
+    font-size: 2.5em; 
+    margin: 20px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  }
+  button {
+    margin: 8px; 
+    padding: 12px 24px;
+    border: none; 
+    border-radius: 12px;
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    cursor: pointer; 
+    font-size: 1em;
+    font-weight: 600;
+    transition: all 0.3s;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+  button:hover { 
+    background: linear-gradient(135deg, #45a049, #3d8b40);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  }
+  button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  button:disabled { 
+    background: #9ccc9c; 
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  #menu, #game {
+    position: absolute; 
+    top: 0; 
+    left: 0;
+    width: 100%; 
+    min-height: 100vh;
+    display: flex; 
+    flex-direction: column;
+    align-items: center; 
+    justify-content: center;
+    background: linear-gradient(135deg, #a3d9a5, #e7ffe9);
+    transition: opacity 0.5s;
+    padding: 20px;
+  }
+
+  #stats {
+    background: rgba(255,255,255,0.9);
+    padding: 15px 30px;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    margin: 10px 0;
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .stat-label {
+    font-size: 0.9em;
+    opacity: 0.8;
+    margin-bottom: 5px;
+  }
+  .stat-value {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #2f4f2f;
+  }
+
+  #garden { 
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 15px;
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+  }
+  .plot {
+    background: linear-gradient(135deg, #fff, #f5f5f5);
+    border: 3px solid #4CAF50;
+    border-radius: 15px;
+    width: 110px; 
+    height: 110px;
+    display: flex; 
+    flex-direction: column;
+    align-items: center; 
+    justify-content: center;
+    font-size: 3em; 
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    position: relative;
+  }
+  .plot:hover { 
+    transform: scale(1.08) rotate(2deg);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    border-color: #45a049;
+  }
+  .plot-stage {
+    font-size: 0.3em;
+    position: absolute;
+    bottom: 5px;
+    opacity: 0.6;
+  }
+  .plot.harvestable {
+    animation: pulse 1.5s infinite;
+    border-color: #FFD700;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  @keyframes harvest {
+    0% { transform: scale(1) rotate(0deg); }
+    50% { transform: scale(1.3) rotate(180deg); }
+    100% { transform: scale(0) rotate(360deg); }
+  }
+  .harvesting {
+    animation: harvest 0.5s ease-out;
+  }
+
+  #shop { 
+    background: rgba(255,255,255,0.9);
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    margin-top: 20px;
+    max-width: 700px;
+  }
+  #shop h2 {
+    margin-top: 0;
+  }
+  .shop-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+  .upgrade-btn {
+    background: linear-gradient(135deg, #FF9800, #F57C00);
+    min-width: 200px;
+  }
+  .upgrade-btn:hover {
+    background: linear-gradient(135deg, #F57C00, #E65100);
+  }
+  .upgrade-btn:disabled {
+    background: #FFB74D;
+  }
+  
+  #musicBtn { 
+    background: linear-gradient(135deg, #388E3C, #2E7D32);
+  }
+  #credits { 
+    font-size: 0.9em; 
+    opacity: 0.8; 
+    margin-top: 20px;
+  }
+
+  .notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(76, 175, 80, 0.95);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    animation: slideIn 0.3s, slideOut 0.3s 2.7s;
+    z-index: 1000;
+    font-weight: 600;
+  }
+  @keyframes slideIn {
+    from { transform: translateX(400px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  @keyframes slideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(400px); opacity: 0; }
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(0,0,0,0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 5px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #8BC34A);
+    transition: width 0.3s;
+  }
+</style>
+</head>
+<body>
+
+<!-- MAIN MENU -->
+<div id="menu">
+  <h1>🌿 Garden Grower 🌿</h1>
+  <p style="font-size: 1.2em; margin: 20px; max-width: 500px;">
+    Plant seeds, watch them grow, and harvest for coins! Upgrade your garden to become the ultimate gardener! 🌻
+  </p>
+  <button id="startBtn" style="font-size: 1.2em; padding: 15px 40px;">🌱 Start Gardening</button>
+  <button id="musicToggle">🔊 Toggle Music</button>
+  <div id="credits">Made with ❤️ for relaxing gameplay</div>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="game" style="display:none;">
+  <h1>🌱 Garden Grower 🌱</h1>
+  
+  <div id="stats">
+    <div class="stat-item">
+      <div class="stat-label">💰 Coins</div>
+      <div class="stat-value" id="coins">0</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">🌻 Per Harvest</div>
+      <div class="stat-value" id="coinPerPlant">1</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">📦 Plots</div>
+      <div class="stat-value" id="plotCount">1</div>
+    </div>
+  </div>
+
+  <div id="garden"></div>
+
+  <div id="shop">
+    <h2>🛒 Garden Shop</h2>
+    <div class="shop-buttons">
+      <button id="buySeed" class="upgrade-btn">
+        🌾 Better Seeds<br>
+        <small>+1 coin/harvest • Cost: <span id="seedCost">10</span></small>
+      </button>
+      <button id="buyPlot" class="upgrade-btn">
+        📦 New Plot<br>
+        <small>+1 plot • Cost: <span id="plotCost">50</span></small>
+      </button>
+      <button id="buyWater" class="upgrade-btn">
+        💧 Auto-Water<br>
+        <small>Auto-grow • Cost: <span id="waterCost">100</span></small>
+      </button>
+      <button id="buySpeed" class="upgrade-btn">
+        ⚡ Faster Growth<br>
+        <small>-20% time • Cost: <span id="speedCost">200</span></small>
+      </button>
+    </div>
+    <div style="margin-top: 20px;">
+      <button id="backToMenu">🏠 Main Menu</button>
+      <button id="resetGame" style="background: linear-gradient(135deg, #f44336, #d32f2f);">🔄 Reset Game</button>
+    </div>
+  </div>
+</div>
+
+<!-- AUDIO -->
+<audio id="bgm" loop>
+  <source src="https://files.catbox.moe/3q6vje.mp3" type="audio/mpeg">
+</audio>
+<audio id="sfxHarvest" src="https://files.catbox.moe/w1hc8q.mp3"></audio>
+<audio id="sfxBuy" src="https://files.catbox.moe/mxehpt.mp3"></audio>
+<audio id="sfxPlant" src="https://files.catbox.moe/9m6e0g.mp3"></audio>
+
+<script>
+/* ====== GAME STATE ====== */
+const defaultState = {
+  coins: 0,
+  coinPerPlant: 1,
+  plots: 1,
+  seedCost: 10,
+  plotCost: 50,
+  waterCost: 100,
+  speedCost: 200,
+  autoWater: false,
+  growthSpeed: 3000,
+  plants: [{ stage: 0, progress: 0 }]
+};
+
+let state = {...defaultState};
+
+/* ====== DOM ELEMENTS ====== */
+const menu = document.getElementById("menu");
+const game = document.getElementById("game");
+const garden = document.getElementById("garden");
+const bgm = document.getElementById("bgm");
+const sfxHarvest = document.getElementById("sfxHarvest");
+const sfxBuy = document.getElementById("sfxBuy");
+const sfxPlant = document.getElementById("sfxPlant");
+
+/* ====== SAVE / LOAD ====== */
+function saveGame() {
+  try {
+    const data = {...state};
+    const gardenData = JSON.stringify(data);
+    localStorage.setItem("gardenGame", gardenData);
+  } catch (e) {
+    console.error("Save failed:", e);
+  }
+}
+
+function loadGame() {
+  try {
+    const saved = localStorage.getItem("gardenGame");
+    if (saved) {
+      const data = JSON.parse(saved);
+      state = {...defaultState, ...data};
+      // Ensure plants array exists
+      if (!state.plants || state.plants.length === 0) {
+        state.plants = [{stage: 0, progress: 0}];
+      }
+    }
+  } catch (e) {
+    console.error("Load failed:", e);
+    state = {...defaultState};
+  }
+}
+
+/* ====== NOTIFICATIONS ====== */
+function showNotification(message) {
+  const notif = document.createElement("div");
+  notif.className = "notification";
+  notif.textContent = message;
+  document.body.appendChild(notif);
+  setTimeout(() => notif.remove(), 3000);
+}
+
+/* ====== UI ====== */
+function updateUI() {
+  document.getElementById("coins").textContent = Math.floor(state.coins);
+  document.getElementById("coinPerPlant").textContent = state.coinPerPlant;
+  document.getElementById("plotCount").textContent = state.plots;
+  document.getElementById("seedCost").textContent = state.seedCost;
+  document.getElementById("plotCost").textContent = state.plotCost;
+  document.getElementById("waterCost").textContent = state.waterCost;
+  document.getElementById("speedCost").textContent = state.speedCost;
+  
+  // Disable buttons if can't afford
+  document.getElementById("buySeed").disabled = state.coins < state.seedCost;
+  document.getElementById("buyPlot").disabled = state.coins < state.plotCost;
+  document.getElementById("buyWater").disabled = state.autoWater || state.coins < state.waterCost;
+  document.getElementById("buySpeed").disabled = state.coins < state.speedCost;
+  
+  if (state.autoWater) {
+    document.getElementById("buyWater").textContent = "💧 Auto-Water ✓";
+  }
+  
+  renderGarden();
+}
+
+function renderGarden() {
+  garden.innerHTML = "";
+  for (let i = 0; i < state.plots; i++) {
+    const plot = document.createElement("div");
+    plot.className = "plot";
+    let plant = state.plants[i] || { stage: 0, progress: 0 };
+    
+    const stageEmoji = ["🌱", "🌿", "🌻"];
+    const stageName = ["Seed", "Growing", "Ready!"];
+    
+    plot.innerHTML = `
+      ${stageEmoji[plant.stage]}
+      <div class="plot-stage">${stageName[plant.stage]}</div>
+    `;
+    
+    if (plant.stage === 2) {
+      plot.classList.add("harvestable");
+    }
+
+    plot.onclick = () => handlePlotClick(i, plot);
+    garden.appendChild(plot);
+  }
+}
+
+function handlePlotClick(i, plotEl) {
+  let plant = state.plants[i];
+  
+  if (plant.stage === 2) {
+    // Harvest
+    state.coins += state.coinPerPlant;
+    sfxHarvest.currentTime = 0;
+    sfxHarvest.play();
+    plotEl.classList.add("harvesting");
+    showNotification(`+${state.coinPerPlant} coins! 💰`);
+    
+    setTimeout(() => {
+      plant.stage = 0;
+      plant.progress = 0;
+      state.plants[i] = plant;
+      updateUI();
+      saveGame();
+    }, 500);
+  } else {
+    // Manual grow
+    sfxPlant.currentTime = 0;
+    sfxPlant.play();
+    plant.stage = Math.min(plant.stage + 1, 2);
+    plant.progress = 0;
+    state.plants[i] = plant;
+    updateUI();
+    saveGame();
+  }
+}
+
+/* ====== SHOP BUTTONS ====== */
+document.getElementById("buySeed").onclick = () => {
+  if (state.coins >= state.seedCost) {
+    state.coins -= state.seedCost;
+    state.coinPerPlant++;
+    state.seedCost = Math.round(state.seedCost * 1.5);
+    sfxBuy.currentTime = 0;
+    sfxBuy.play();
+    showNotification("🌾 Seeds upgraded!");
+    updateUI();
+    saveGame();
+  }
+};
+
+document.getElementById("buyPlot").onclick = () => {
+  if (state.coins >= state.plotCost) {
+    state.coins -= state.plotCost;
+    state.plots++;
+    state.plants.push({ stage: 0, progress: 0 });
+    state.plotCost = Math.round(state.plotCost * 1.6);
+    sfxBuy.currentTime = 0;
+    sfxBuy.play();
+    showNotification("📦 New plot added!");
+    updateUI();
+    saveGame();
+  }
+};
+
+document.getElementById("buyWater").onclick = () => {
+  if (!state.autoWater && state.coins >= state.waterCost) {
+    state.coins -= state.waterCost;
+    state.autoWater = true;
+    sfxBuy.currentTime = 0;
+    sfxBuy.play();
+    showNotification("💧 Auto-water activated!");
+    updateUI();
+    saveGame();
+  }
+};
+
+document.getElementById("buySpeed").onclick = () => {
+  if (state.coins >= state.speedCost) {
+    state.coins -= state.speedCost;
+    state.growthSpeed = Math.max(500, state.growthSpeed * 0.8);
+    state.speedCost = Math.round(state.speedCost * 2);
+    sfxBuy.currentTime = 0;
+    sfxBuy.play();
+    showNotification("⚡ Growth speed increased!");
+    clearInterval(growthInterval);
+    growthInterval = setInterval(growPlants, state.growthSpeed);
+    updateUI();
+    saveGame();
+  }
+};
+
+/* ====== AUTO GROW ====== */
+function growPlants() {
+  if (!state.autoWater) return;
+  
+  let changed = false;
+  for (let i = 0; i < state.plants.length; i++) {
+    let plant = state.plants[i] || { stage: 0, progress: 0 };
+    if (plant.stage < 2) {
+      plant.stage++;
+      plant.progress = 0;
+      state.plants[i] = plant;
+      changed = true;
+    }
+  }
+  
+  if (changed) {
+    updateUI();
+    saveGame();
+  }
+}
+
+/* ====== MENU HANDLING ====== */
+document.getElementById("startBtn").onclick = () => {
+  menu.style.display = "none";
+  game.style.display = "flex";
+  bgm.play().catch(e => console.log("Audio play failed:", e));
+  updateUI();
+};
+
+document.getElementById("backToMenu").onclick = () => {
+  saveGame();
+  game.style.display = "none";
+  menu.style.display = "flex";
+};
+
+document.getElementById("musicToggle").onclick = () => {
+  if (bgm.paused) {
+    bgm.play().catch(e => console.log("Audio play failed:", e));
+  } else {
+    bgm.pause();
+  }
+};
+
+document.getElementById("resetGame").onclick = () => {
+  if (confirm("Are you sure you want to reset your garden? This cannot be undone!")) {
+    localStorage.removeItem("gardenGame");
+    state = {...defaultState};
+    showNotification("🔄 Garden reset!");
+    updateUI();
+  }
+};
+
+/* ====== INIT ====== */
+loadGame();
+// Ensure plants array matches plots
+while (state.plants.length < state.plots) {
+  state.plants.push({ stage: 0, progress: 0 });
+}
+updateUI();
+let growthInterval = setInterval(growPlants, state.growthSpeed);
+</script>
+</body>
+</html>
